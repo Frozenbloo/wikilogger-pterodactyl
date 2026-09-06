@@ -1,0 +1,142 @@
+{
+    "_comment": "wikilogger all-in-one (Postgres + Redis + bot) for Pterodactyl.",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-09-06T00:00:00+00:00",
+    "name": "wikilogger (All-in-One)",
+    "author": "tomwbloomer@gmail.com",
+    "description": "Logger v3 (fee1-dead/wikilogger fork) — a Discord audit-logging bot. Bundles PostgreSQL, Redis and the bot in one container via supervisord; all state lives under /home/container. Needs the Server Members and Message Content privileged intents enabled on the Discord application.",
+    "features": null,
+    "docker_images": {
+        "wikilogger all-in-one": "ghcr.io/frozenbloo/wikilogger-pterodactyl:latest"
+    },
+    "file_denylist": [],
+    "startup": "sh /entrypoint.sh",
+    "config": {
+        "files": "{}",
+        "startup": "{\"done\": \"is now ready to serve requests\"}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/ash\necho 'wikilogger image is self-contained; nothing to install.'\n",
+            "container": "alpine:3.19",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Bot Token",
+            "description": "Discord bot token from the Bot tab of your application. Raw token, no 'Bot ' prefix.",
+            "env_variable": "BOT_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Creator ID",
+            "description": "Your Discord user ID. Required to run the hidden owner commands, above all 'setcmd global', which registers the slash commands. A single ID only — the upstream code compares this field directly.",
+            "env_variable": "CREATOR_IDS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Enable Text Commands",
+            "description": "Set to 'true' to enable the prefix commands, which is how slash commands get registered (see the README). Leave blank to disable — any non-empty value counts as enabled, including 'false'.",
+            "env_variable": "ENABLE_TEXT_COMMANDS",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Command Prefix",
+            "description": "Prefix for the text commands, e.g. 'v3' makes the register command 'v3setcmd global'.",
+            "env_variable": "GLOBAL_BOT_PREFIX",
+            "default_value": "v3",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "AES Key",
+            "description": "Key used to encrypt logged message content in the database. Leave blank and one is generated on first boot and kept in /home/container/aes.key. Changing it makes already-stored messages unreadable.",
+            "env_variable": "AES_KEY",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Message Batch Size",
+            "description": "How many cached messages to flush to Postgres per batch.",
+            "env_variable": "MESSAGE_BATCH_SIZE",
+            "default_value": "10",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "Redis Lock TTL",
+            "description": "Milliseconds a shard holds the Redis startup lock while connecting. Raise it if shards fight over identify slots.",
+            "env_variable": "REDIS_LOCK_TTL",
+            "default_value": "2000",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer",
+            "field_type": "text"
+        },
+        {
+            "name": "Error Webhook URL",
+            "description": "Optional Discord webhook URL for the bot's own error and status notifications. Blank disables the notifier.",
+            "env_variable": "DISCORD_WEBHOOK_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Sentry DSN",
+            "description": "Optional Sentry DSN for exception reporting. Blank disables Sentry.",
+            "env_variable": "SENTRY_URI",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Paste Endpoint",
+            "description": "Optional haste-server style POST endpoint used by /archive and bulk-delete logs. Blank means those features error out.",
+            "env_variable": "PASTE_CREATE_ENDPOINT",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Paste Token",
+            "description": "Optional Authorization header value sent to the paste endpoint.",
+            "env_variable": "PASTE_CREATE_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        }
+    ]
+}
