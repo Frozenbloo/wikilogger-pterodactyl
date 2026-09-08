@@ -1,8 +1,9 @@
 # wikilogger on Pterodactyl
 
-Run [wikilogger](https://github.com/fee1-dead/wikilogger) — the Wikimedia fork
-of [Logger](https://github.com/curtisf/logger), a Discord audit-logging bot —
-as a single Pterodactyl server. Postgres, Redis and the bot all live in one
+A fork of [wikilogger](https://github.com/fee1-dead/wikilogger) — itself the
+Wikimedia fork of [Logger](https://github.com/curtisf/logger), a Discord
+audit-logging bot — packaged to run as a single Pterodactyl server. The bot
+source lives in [`bot/`](bot); Postgres, Redis and the bot all run in one
 container managed by supervisord, and every bit of state sits under
 `/home/container` so it survives restarts and reinstalls.
 
@@ -13,9 +14,9 @@ into that one container and drives it from egg variables instead.
 
 ## How it works
 
-- Built from source in a multi-stage Dockerfile — there are no prebuilt
-  releases, and `eris` is pulled from a git fork, so the build stage needs npm
-  and git.
+- Built in a multi-stage Dockerfile straight from `bot/` in this repo, so a
+  code change ships by pushing it. `eris` comes from a git fork, so the build
+  stage needs npm and git.
 - On first boot `entrypoint.sh` initialises the Postgres cluster, creates the
   `logger` role and database, and applies the schema from upstream's
   `generateDB.js`. The schema statements are `IF NOT EXISTS` and run on every
@@ -67,12 +68,11 @@ server variables if you actually run that infrastructure.
 
 ## Things to know
 
-- **The messageContent patch.** The intent list in upstream's
-  `src/bot/index.js` predates Discord's `messageContent` intent, and the `eris`
-  fork has no name for it either. Without it Discord blanks every message body
-  and the delete/edit logs come out empty, so the Dockerfile injects the raw
-  intent bit at build time. The build fails loudly if upstream restructures
-  that list.
+- **The messageContent intent is a local change.** Upstream's intent list
+  predates it and the `eris` fork has no name for it, so
+  [`bot/src/bot/index.js`](bot/src/bot/index.js) adds the raw bit `32768`.
+  Without it Discord blanks every message body and the delete/edit logs come
+  out empty. Watch for it if you ever rebase onto upstream.
 - **Message retention is unbounded.** Upstream's `.env.example` mentions
   `MESSAGE_HISTORY_DAYS`, but nothing in the code reads it and there is no
   pruning job. The `messages` table grows until you prune it yourself.
@@ -85,17 +85,20 @@ server variables if you actually run that infrastructure.
 
 Every push to `main` builds and pushes `:latest`, `:main` and `:sha-…` to GHCR,
 so committing and pushing is enough to get an importable egg. Tagging also
-publishes `:X.Y.Z` and `:X.Y`.
+publishes `:X.Y.Z` and `:X.Y`. The image name follows the repo name, so if you
+rename this repo, update `docker_images` in `egg-wikilogger.json` to match.
 
 ```sh
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The bot source is baked into the image at build time. To pick up new upstream
-commits, re-run the workflow — the `main` build always fetches the current tip,
-and **Run workflow** takes a `wikilogger_version` ref if you want a specific
-tag or commit.
+`bot/` was added with `git subtree`, so upstream history is intact and new
+upstream commits merge in with:
+
+```sh
+git subtree pull --prefix=bot https://github.com/fee1-dead/wikilogger.git main
+```
 
 See [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
 
@@ -103,7 +106,8 @@ See [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
 
 | File | What it is |
 |------|-----------|
-| `Dockerfile` | Two-stage build: fetch and install wikilogger, then assemble the runtime image |
+| `bot/` | The bot itself — fork this repo's copy, not upstream's |
+| `Dockerfile` | Two-stage build: install deps, then assemble the runtime image |
 | `entrypoint.sh` | First-boot DB setup, schema, key generation, and handoff to supervisord |
 | `supervisord.conf` | Keeps Postgres, Redis and the bot running |
 | `egg-wikilogger.json` | The Pterodactyl egg you import |
@@ -111,6 +115,7 @@ See [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
 
 ## License
 
-The packaging in this repo is [MIT](LICENSE). wikilogger itself is
-AGPL-3.0-or-later; the image built here contains it, so anything you distribute
-from that image carries the AGPL's terms.
+The packaging (Dockerfile, entrypoint, egg) is [MIT](LICENSE). The bot in
+`bot/` is AGPL-3.0-or-later ([`bot/LICENSE.md`](bot/LICENSE.md)) and stays that
+way — your changes to it, and anything you distribute from the built image,
+carry the AGPL's terms.

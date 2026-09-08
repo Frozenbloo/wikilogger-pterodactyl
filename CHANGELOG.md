@@ -5,6 +5,12 @@ Notable changes to this egg. Format loosely follows
 
 ## [Unreleased]
 
+- Forked the bot into `bot/` with `git subtree`, keeping upstream history. The
+  image now builds from this repo instead of cloning `fee1-dead/wikilogger` at
+  build time, so bot changes ship by pushing them.
+- The `messageContent` intent is now a source change in `bot/src/bot/index.js`
+  rather than a `sed` in the Dockerfile.
+
 ## [1.0.0]
 
 First working version.

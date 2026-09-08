@@ -5,10 +5,6 @@ on:
     branches: [main]
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      wikilogger_version:
-        description: wikilogger git ref to build (tag / branch / commit)
-        default: main
 
 permissions:
   contents: read
@@ -45,7 +41,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            WIKILOGGER_VERSION=${{ github.event.inputs.wikilogger_version || 'main' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
