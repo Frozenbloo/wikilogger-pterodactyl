@@ -14,6 +14,13 @@ module.exports = {
     global.bot.editStatus('online');
     if (global.bot.shards.find(s => s.id === 0)) { // only check for missing settings once
       await checkForMissingSettings()
+      // ponytail: bulk overwrite is idempotent, so just re-register every boot instead of needing a manual setcmd
+      try {
+        await global.bot.bulkEditCommands(require('../utils/slashcommandconstants').commands)
+        global.logger.info('Registered global slash commands')
+      } catch (e) {
+        global.logger.error('Error registering global slash commands', e)
+      }
     }
     setInterval(() => {
       if (bot.shards.filter(shard => shard.latency == Infinity && shard.status === 'disconnected').length !== 0) {
