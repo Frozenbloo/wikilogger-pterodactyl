@@ -22,6 +22,9 @@ module.exports = {
         global.logger.error('Error registering global slash commands', e)
       }
     }
+    for (const guild of global.bot.guilds.values()) {
+      global.bot.bulkEditGuildCommands(guild.id, []).catch(e => global.logger.error(`Error clearing guild commands for ${guild.id}`, e))
+    }
     setInterval(() => {
       if (bot.shards.filter(shard => shard.latency == Infinity && shard.status === 'disconnected').length !== 0) {
         failedHealthCheckCount++
